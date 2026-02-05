@@ -18,7 +18,13 @@ export async function getTasks() {
   }));
 }
 
-export async function clearTasks() {
+export async function deleteTask(id) {
+  const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  if (!id || typeof id !== "string" || !uuidV4Regex.test(id)) {
+    throw new Error("Invalid task ID.");
+  }
+
   const database = await db.getDatabase();
-  await db.clearTasks(database);
+  await db.deleteTask(database, id.toLowerCase());
 }

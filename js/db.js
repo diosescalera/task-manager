@@ -54,7 +54,7 @@ export function getTasks(db) {
 
 export function addTask(db, title) {
   const record = {
-    id: crypto.randomUUID(),
+    id: crypto.randomUUID().toLowerCase(),
     title: title,
   };
 
@@ -68,12 +68,12 @@ export function addTask(db, title) {
   });
 }
 
-export function clearTasks(db) {
+export function deleteTask(db, id) {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const store = transaction.objectStore(STORE_NAME);
-    const request = store.clear();
-
+    const request = store.delete(id);
+    
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });

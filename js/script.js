@@ -8,9 +8,19 @@ async function loadTasks() {
     taskList.innerHTML = "";
 
     tasks.forEach((task) => {
-      const li = document.createElement("li");
-      li.textContent = task.title;
-      taskList.appendChild(li);
+      const taskContainer = document.createElement("div");
+      
+      const taskTitle = document.createElement("span");
+      taskTitle.textContent = task.title;
+      
+      const deleteTaskBtn = document.createElement("button");
+      deleteTaskBtn.dataset.action = "delete-task";
+      deleteTaskBtn.dataset.taskId = task.id;
+      deleteTaskBtn.textContent = "Delete";
+      
+      taskContainer.appendChild(taskTitle);
+      taskContainer.appendChild(deleteTaskBtn);
+      taskList.appendChild(taskContainer);
     });
   } catch (error) {
     console.error("Failed to load tasks:", error);
@@ -34,12 +44,12 @@ async function addTask() {
   }
 }
 
-async function clearTasks() {
+async function deleteTask(id) {
   try {
-    await api.clearTasks();
+    await api.deleteTask(id);
     await loadTasks();
   } catch (error) {
-    console.error("Failed to clear tasks:", error);
+    console.error("Failed to delete task:", error);
   }
 }
 
@@ -50,7 +60,7 @@ window.addEventListener("load", () => {
 document.addEventListener("click", (event) => {
   if (event.target.id === "add-task-btn") {
     addTask();
-  } else if (event.target.id === "clear-tasks-btn") {
-    clearTasks();
+  } else if (event.target.dataset.action === "delete-task") {
+    deleteTask(event.target.dataset.taskId);
   }
 });
