@@ -12,6 +12,9 @@ async function loadTasks() {
       
       const taskTitle = document.createElement("span");
       taskTitle.textContent = task.title;
+
+      const taskDescription = document.createElement("p");
+      taskDescription.textContent = task.description;
       
       const deleteTaskBtn = document.createElement("button");
       deleteTaskBtn.dataset.action = "delete-task";
@@ -20,6 +23,7 @@ async function loadTasks() {
       
       taskContainer.appendChild(taskTitle);
       taskContainer.appendChild(deleteTaskBtn);
+      taskContainer.appendChild(taskDescription);
       taskList.appendChild(taskContainer);
     });
   } catch (error) {
@@ -28,16 +32,20 @@ async function loadTasks() {
 }
 
 async function addTask() {
-  const taskTitleInput = document.getElementById("task-title-input");
+  const taskTitleInput = document.getElementById("task-title-input");  
   const title = taskTitleInput.value.trim();
+
+  const taskDescriptionInput = document.getElementById("task-description-input");
+  const description = taskDescriptionInput.value.trim();
 
   if (!title) {
     return;
   }
 
   try {
-    await api.createTask(title);
+    await api.createTask(title, description);
     taskTitleInput.value = "";
+    taskDescriptionInput.value = "";
     await loadTasks();
   } catch (error) {
     console.error("Failed to add task:", error);

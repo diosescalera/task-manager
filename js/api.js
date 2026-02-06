@@ -1,12 +1,14 @@
 import * as db from "./db.js";
 
-export async function createTask(title) {
+export async function createTask(title, description) {
   if (!title || typeof title !== "string" || title.trim() === "") {
     throw new Error("Task title is required.");
   }
 
+  const normalizedDescription = typeof description === "string" ? description : "";
+
   const database = await db.getDatabase();
-  await db.addTask(database, title.trim());
+  await db.addTask(database, title.trim(), normalizedDescription.trim());
 }
 
 export async function getTasks() {
@@ -14,7 +16,8 @@ export async function getTasks() {
   const records = await db.getTasks(database);
   return records.map(record => ({
     id: record.id,
-    title: record.title
+    title: record.title,
+    description: record.description
   }));
 }
 
