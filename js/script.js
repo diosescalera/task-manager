@@ -1,4 +1,4 @@
-import * as api from "./api.js";
+import * as api from "./api.js?v=2";
 
 async function loadTasks() {
   const taskList = document.getElementById("task-list");
@@ -32,7 +32,7 @@ async function loadTasks() {
 }
 
 async function addTask() {
-  const taskTitleInput = document.getElementById("task-title-input");  
+  const taskTitleInput = document.getElementById("task-title-input");
   const title = taskTitleInput.value.trim();
 
   const taskDescriptionInput = document.getElementById("task-description-input");

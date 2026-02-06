@@ -1,4 +1,4 @@
-import * as db from "./db.js";
+import * as db from "./db.js?v=2";
 
 export async function createTask(title, description) {
   if (!title || typeof title !== "string" || title.trim() === "") {
