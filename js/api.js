@@ -1,14 +1,40 @@
-import * as db from "./db.js?v=2";
+import * as db from "./db.js?v=3";
 
-export async function createTask(title, description) {
+function validateISODate(dateStr) {
+  if (!dateStr) {
+    return null;
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    throw new Error("Invalid format for date");
+  }
+
+  const [year, month, day] = dateStr.split("-").map(Number);
+
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    throw new Error("Invalid date");
+  }
+
+  return dateStr;
+}
+
+export async function createTask(title, description, date) {
   if (!title || typeof title !== "string" || title.trim() === "") {
     throw new Error("Task title is required.");
   }
 
   const normalizedDescription = typeof description === "string" ? description : "";
 
+  const cleanDate = validateISODate(date);
+
   const database = await db.getDatabase();
-  await db.addTask(database, title.trim(), normalizedDescription.trim());
+  await db.addTask(database, title.trim(), normalizedDescription.trim(), cleanDate);
 }
 
 export async function getTasks() {
@@ -17,7 +43,8 @@ export async function getTasks() {
   return records.map(record => ({
     id: record.id,
     title: record.title,
-    description: record.description
+    description: record.description,
+    date: record.date
   }));
 }
 

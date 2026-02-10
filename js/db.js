@@ -52,11 +52,12 @@ export function getTasks(db) {
   });
 }
 
-export function addTask(db, title, description) {
+export function addTask(db, title, description, date) {
   const record = {
     id: crypto.randomUUID().toLowerCase(),
     title: title,
-    description: description
+    description: description,
+    date: date
   };
 
   return new Promise((resolve, reject) => {

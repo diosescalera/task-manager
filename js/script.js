@@ -1,4 +1,4 @@
-import * as api from "./api.js?v=2";
+import * as api from "./api.js?v=3";
 
 async function loadTasks() {
   const taskList = document.getElementById("task-list");
@@ -15,6 +15,9 @@ async function loadTasks() {
 
       const taskDescription = document.createElement("p");
       taskDescription.textContent = task.description;
+
+      const taskDate = document.createElement("p");
+      taskDate.textContent = task.date;
       
       const deleteTaskBtn = document.createElement("button");
       deleteTaskBtn.dataset.action = "delete-task";
@@ -24,6 +27,7 @@ async function loadTasks() {
       taskContainer.appendChild(taskTitle);
       taskContainer.appendChild(deleteTaskBtn);
       taskContainer.appendChild(taskDescription);
+      taskContainer.appendChild(taskDate);
       taskList.appendChild(taskContainer);
     });
   } catch (error) {
@@ -38,14 +42,18 @@ async function addTask() {
   const taskDescriptionInput = document.getElementById("task-description-input");
   const description = taskDescriptionInput.value.trim();
 
+  const taskDateInput = document.getElementById("task-date-input");
+  const date = taskDateInput.value;
+
   if (!title) {
     return;
   }
 
   try {
-    await api.createTask(title, description);
+    await api.createTask(title, description, date);
     taskTitleInput.value = "";
     taskDescriptionInput.value = "";
+    taskDateInput.value = "";
     await loadTasks();
   } catch (error) {
     console.error("Failed to add task:", error);
