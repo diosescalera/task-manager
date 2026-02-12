@@ -1,0 +1,112 @@
+const DB_NAME = "task_manager";
+const DB_VERSION = 1;
+const STORE_NAME = "tasks";
+
+let db = null;
+
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains(STORE_NAME)) {
+        database.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getDb() {
+  if (!db) db = await openDatabase();
+  return db;
+}
+
+function dbRequest(storeName, mode, action) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, mode);
+    const store = transaction.objectStore(storeName);
+    const request = action(store);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function loadTasks() {
+  const taskList = document.getElementById("task-list");
+  await getDb();
+
+  const tasks = await dbRequest(STORE_NAME, "readonly", (store) => store.getAll());
+  taskList.innerHTML = "";
+
+  tasks.forEach((task) => {
+    const taskContainer = document.createElement("div");
+
+    const taskTitle = document.createElement("span");
+    taskTitle.textContent = task.title;
+
+    const taskDescription = document.createElement("p");
+    taskDescription.textContent = task.description;
+
+    const taskDate = document.createElement("p");
+    taskDate.textContent = task.date;
+
+    const deleteTaskBtn = document.createElement("button");
+    deleteTaskBtn.dataset.action = "delete-task";
+    deleteTaskBtn.dataset.taskId = task.id;
+    deleteTaskBtn.textContent = "Delete";
+
+    const hr = document.createElement("hr");
+
+    taskContainer.appendChild(taskTitle);
+    taskContainer.appendChild(deleteTaskBtn);
+    if (task.description) taskContainer.appendChild(taskDescription);
+    if (task.date) taskContainer.appendChild(taskDate);
+    taskContainer.appendChild(hr);
+    taskList.appendChild(taskContainer);
+  });
+}
+
+async function addTask() {
+  const taskTitleInput = document.getElementById("task-title-input");
+  const title = taskTitleInput.value.trim();
+  if (!title) return;
+
+  const taskDescriptionInput = document.getElementById("task-description-input");
+  const description = taskDescriptionInput.value.trim() || null;
+
+  const taskDateInput = document.getElementById("task-date-input");
+  const date = taskDateInput.value || null;
+
+  await getDb();
+  await dbRequest(STORE_NAME, "readwrite", (store) =>
+    store.add({
+      id: crypto.randomUUID(),
+      title,
+      description,
+      date,
+    })
+  );
+
+  taskTitleInput.value = "";
+  taskDescriptionInput.value = "";
+  taskDateInput.value = "";
+  await loadTasks();
+}
+
+async function deleteTask(id) {
+  await getDb();
+  await dbRequest(STORE_NAME, "readwrite", (store) => store.delete(id));
+  await loadTasks();
+}
+
+window.addEventListener("load", () => loadTasks());
+
+document.addEventListener("click", (event) => {
+  if (event.target.id === "add-task-btn") {
+    addTask();
+  } else if (event.target.dataset.action === "delete-task") {
+    deleteTask(event.target.dataset.taskId);
+  }
+});
