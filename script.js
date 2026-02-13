@@ -1,6 +1,7 @@
 const DB_NAME = "task_manager";
 const DB_VERSION = 1;
 const STORE_NAME = "tasks";
+const IMPORTANCE_GAP = 128;
 
 let db = null;
 
@@ -31,6 +32,58 @@ function dbRequest(storeName, mode, action) {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
+}
+
+async function rebalanceImportance() {
+  await getDb();
+  const tasks = await dbRequest(STORE_NAME, "readonly", (store) => store.getAll());
+  
+  tasks.sort((a, b) => {
+    const aValid = a.importance && typeof a.importance === 'number' && !isNaN(a.importance);
+    const bValid = b.importance && typeof b.importance === 'number' && !isNaN(b.importance);
+
+    if (aValid && bValid) return a.importance - b.importance;
+    if (!aValid && !bValid) return a.id.localeCompare(b.id);
+    return aValid ? -1 : 1;
+  });
+  
+  const transaction = db.transaction(STORE_NAME, "readwrite");
+  const store = transaction.objectStore(STORE_NAME);
+  
+  tasks.forEach((task, index) => {
+    task.importance = (index + 1) * IMPORTANCE_GAP;
+    store.put(task);
+  });
+  
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error);
+  });
+}
+
+async function getTaskImportance() {
+  await getDb();
+  const tasks = await dbRequest(STORE_NAME, "readonly", (store) => store.getAll());
+  
+  if (tasks.length === 0) return IMPORTANCE_GAP;
+  
+  const validTasks = tasks.filter(t => 
+    t.importance && typeof t.importance === 'number' && !isNaN(t.importance)
+  );
+  
+  const lowestImportance = validTasks.length > 0 
+    ? Math.min(...validTasks.map(t => t.importance))
+    : Infinity;
+    
+  const newImportance = lowestImportance / 2;
+  const needsRebalance = validTasks.length < tasks.length || newImportance < 1 || !Number.isInteger(newImportance);
+  
+  if (needsRebalance) {
+    await rebalanceImportance();
+    return IMPORTANCE_GAP / 2;
+  }
+  
+  return newImportance;
 }
 
 async function loadTasks() {
@@ -79,12 +132,14 @@ async function addTask() {
   const taskDateInput = document.getElementById("task-date-input");
   const date = taskDateInput.value || null;
 
-  await getDb();
+  const importance = await getTaskImportance();
+
   await dbRequest(STORE_NAME, "readwrite", (store) =>
     store.add({
       id: crypto.randomUUID(),
       title,
       description,
+      importance,
       date,
     })
   );
