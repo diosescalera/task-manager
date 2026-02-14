@@ -8,17 +8,29 @@
   <body>
     <h1>Task Manager</h1>
 
-    <input type="text" id="task-title-input" placeholder="Enter a task" />
-    <textarea
-      id="task-description-input"
-      placeholder="Enter task description"
-    ></textarea>
-    <input type="date" id="task-date-input" />
-    <button id="add-task-btn">Add Task</button>
-    <hr>
+    <button id="open-task-modal-btn">New Task</button>
+
+    <dialog closedby="any" id="add-task-dialog">
+      <form method="dialog">
+        <input
+          type="text"
+          id="task-title-input"
+          placeholder="Enter a task"
+          required
+        />
+        <textarea
+          id="task-description-input"
+          placeholder="Enter task description"
+        ></textarea>
+        <input type="date" id="task-date-input" />
+        <button id="add-task-btn" value="default">Add Task</button>
+        <button id="cancel-task-btn" value="cancel">Cancel</button>
+      </form>
+    </dialog>
+    <hr />
 
     <div id="task-list"></div>
 
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
   </body>
 </html>

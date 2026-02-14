@@ -147,6 +147,7 @@ async function addTask() {
   taskTitleInput.value = "";
   taskDescriptionInput.value = "";
   taskDateInput.value = "";
+  document.getElementById("add-task-dialog").close();
   await loadTasks();
 }
 
@@ -159,8 +160,19 @@ async function deleteTask(id) {
 window.addEventListener("load", () => loadTasks());
 
 document.addEventListener("click", (event) => {
-  if (event.target.id === "add-task-btn") {
+  if (event.target.id === "open-task-modal-btn") {
+    document.getElementById("add-task-dialog").showModal();
+  } else if (event.target.id === "add-task-btn") {
+    const form = event.target.closest("form");
+    if (form && !form.checkValidity()) {
+      event.preventDefault();
+      form.reportValidity();
+      return;
+    }
+    event.preventDefault();
     addTask();
+  } else if (event.target.id === "cancel-task-btn") {
+    document.getElementById("add-task-dialog").close();
   } else if (event.target.dataset.action === "delete-task") {
     deleteTask(event.target.dataset.taskId);
   }
